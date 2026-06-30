@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌟 謙謙君子 能量丸大冒險</title>
+<style>
+  :root{
+    --bg-deep:#181225;
+    --bg-panel:#fff3e0;
+    --bg-panel-light:#ffe6c2;
+    --border-dark:#1d3461;
+    --ink:#4a3568;
+    --ink-soft:#6b5a82;
+    --accent-warm:#d9700f;
+    --cream:#fdf6e3;
+    --cream-dim:#cfc4e8;
+    --fire-1:#ff8a3d;
+    --fire-2:#ffd23d;
+    --fire-dark:#7a2400;
+    --gem-1:#6f7bff;
+    --gem-2:#b9a3ff;
+    --gem-dark:#241a6b;
+    --candy-1:#ff8fc6;
+    --candy-2:#ffd1ea;
+    --candy-dark:#9c1f5e;
+    --green:#4ecca3;
+    --green-dark:#1c6b54;
+    --red:#ff5c6c;
+    --red-dark:#7a1320;
+    --yellow:#ffd93d;
+    --yellow-dark:#8a6400;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{font-size:18px;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:#8fd4f5;
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,0.55) 0, transparent 30%),
+      radial-gradient(circle at 82% 20%, rgba(255,255,255,0.35) 0, transparent 25%),
+      radial-gradient(circle at 65% 90%, rgba(255,255,255,0.18) 0, transparent 30%),
+      linear-gradient(180deg, #d9f3ff 0%, #8fd4f5 50%, #3aa3da 100%);
+    color:var(--cream);
+    font-family:"PingFang TC","Microsoft JhengHei","Heiti TC",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-weight:700;
+    min-height:100vh;
+    overscroll-behavior:none;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  #app{
+    max-width:720px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:14px 14px 40px;
+    display:flex;
+    flex-direction:column;
+  }
+  h1,h2,h3{
+    margin:0 0 12px;
+    letter-spacing:1px;
+  }
+  h1{
+    font-size:2rem;
+    color:#fff;
+    text-shadow:
+      2px 2px 0 var(--border-dark), -2px -2px 0 var(--border-dark),
+      2px -2px 0 var(--border-dark), -2px 2px 0 var(--border-dark),
+      0 3px 0 var(--border-dark);
+  }
+  h2{font-size:1.35rem;color:var(--accent-warm);}
+  h3{font-size:1.15rem;color:var(--ink);}
+  p{line-height:1.7;margin:0 0 12px;font-weight:500;}
+  .screen{
+    animation:fadein .25s ease;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+    flex:1;
+  }
+  .screen.center-screen{justify-content:center;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- panel / card ---------- */
+  .panel{
+    background:var(--bg-panel);
+    border:3px solid var(--border-dark);
+    box-shadow:0 6px 0 rgba(29,52,97,.22), 0 10px 18px rgba(20,30,60,.15);
+    border-radius:18px;
+    padding:18px;
+    color:var(--ink);
+  }
+  .panel-tight{padding:12px 14px;}
+  .card{
+    background:var(--bg-panel-light);
+    border:2px solid var(--border-dark);
+    border-radius:14px;
+    padding:12px 14px;
+    color:var(--ink);
+  }
+
+  /* ---------- buttons ---------- */
+  .pixel-btn{
+    font-family:inherit;
+    font-weight:800;
+    font-size:1.15rem;
+    color:var(--bg-deep);
+    background:var(--green);
+    border:3px solid var(--border-dark);
+    box-shadow:4px 4px 0 var(--border-dark);
+    border-radius:12px;
+    padding:16px 20px;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:transform .04s, box-shadow .04s;
+    min-height:54px;
+  }
+  .pixel-btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--border-dark);}
+  .pixel-btn.secondary{background:var(--cream-dim);}
+  .pixel-btn.gem{background:linear-gradient(180deg,var(--gem-2),var(--gem-1));color:#fff;}
+  .pixel-btn.candy{background:linear-gradient(180deg,var(--candy-2),var(--candy-1));color:#5c1042;}
+  .pixel-btn.fire{background:linear-gradient(180deg,var(--fire-2),var(--fire-1));color:#5c1f00;}
+  .pixel-btn.warn{background:var(--red);color:#fff;}
+  .pixel-btn:disabled{opacity:.35;cursor:not-allowed;}
+  .pixel-btn.block{width:100%;display:block;text-align:center;}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn-row .pixel-btn{flex:1;min-width:130px;}
+
+  /* ---------- battery ---------- */
+  .battery-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    gap:3px;
+    padding:10px;
+    background:rgba(255,255,255,0.55);
+    border:2px solid var(--border-dark);
+    border-radius:12px;
+    max-height:140px;
+    overflow-y:auto;
+  }
+  .battery-cell{
+    width:14px;height:22px;
+    border:1.5px solid var(--border-dark);
+    border-radius:3px;
+    background:#fff;
+    flex-shrink:0;
+  }
+  .battery-cell.on{background:var(--green);box-shadow:0 0 4px var(--green) inset;}
+  .battery-cell.low{background:var(--yellow);}
+
+  /* ---------- stat row ---------- */
+  .stat-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .stat-box{
+    flex:1;min-width:130px;
+    background:var(--bg-panel-light);
+    border:2px solid var(--border-dark);
+    border-radius:12px;
+    padding:10px 12px;
+    text-align:center;
+    color:var(--ink);
+  }
+  .stat-box .num{font-size:1.9rem;color:var(--accent-warm);display:block;}
+  .stat-box .lbl{font-size:1rem;color:var(--ink-soft);}
+
+  /* ---------- slots (24格) ---------- */
+  .slot-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    padding:10px;
+    background:rgba(255,255,255,0.55);
+    border:2px solid var(--border-dark);
+    border-radius:12px;
+  }
+  .slot{
+    width:42px;height:42px;
+    border:2px dashed #8b9bc4;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.5);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .slot.filled{border-style:solid;border-color:var(--border-dark);background:rgba(255,255,255,0.85);}
+  .slot.next-hint{border-color:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+
+  /* ---------- sprite icon generic ---------- */
+  .sprite-emoji{display:inline-block;line-height:1;}
+
+  /* ---------- emoji health ---------- */
+  .health-badge{font-size:2.1rem;}
+  .health-row{display:flex;align-items:center;gap:10px;}
+
+  /* ---------- warning box ---------- */
+  .warn-box{
+    background:#fff3c4;
+    border:3px solid var(--accent-warm);
+    color:#6b3f0a;
+    border-radius:14px;
+    padding:14px 16px;
+    font-size:1.05rem;
+    font-weight:700;
+  }
+
+  /* ---------- tip list ---------- */
+  .tip-list{margin:0 0 12px;padding-left:1.3em;}
+  .tip-list li{margin-bottom:8px;}
+
+  /* ---------- pill intro cards ---------- */
+  .pill-card{display:flex;align-items:center;gap:16px;text-align:left;margin-bottom:14px;}
+  .pill-card:last-child{margin-bottom:0;}
+  .pill-card .sprite-emoji{flex-shrink:0;}
+  .pill-card-text{flex:1;}
+  .pill-name{font-size:1.4rem;font-weight:800;color:var(--ink);margin-bottom:4px;}
+  .pill-field{font-size:1.02rem;margin:3px 0;color:var(--ink);}
+  .pill-field b{color:var(--accent-warm);}
+
+  /* ---------- progress dots (day indicator) ---------- */
+  .day-dots{display:flex;gap:8px;justify-content:center;}
+  .day-dot{width:13px;height:13px;border-radius:50%;background:#f0ddc0;border:1.5px solid var(--border-dark);}
+  .day-dot.done{background:var(--green);}
+  .day-dot.active{background:var(--yellow);}
+
+  /* ---------- table ---------- */
+  table.cmp-table{width:100%;border-collapse:collapse;font-size:1rem;}
+  table.cmp-table th,table.cmp-table td{border:2px solid var(--border-dark);padding:8px 10px;text-align:center;}
+  table.cmp-table th{background:var(--bg-panel-light);color:var(--accent-warm);}
+
+  /* ---------- chart ---------- */
+  .chart-wrap{background:rgba(255,255,255,0.55);border:2px solid var(--border-dark);border-radius:12px;padding:10px;}
+  canvas.chart-canvas{width:100%;display:block;}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:.95rem;}
+  .legend-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;}
+
+  /* ---------- numeric stepper ---------- */
+  .stepper{display:flex;align-items:center;gap:16px;justify-content:center;}
+  .stepper .pixel-btn{width:58px;height:58px;font-size:1.5rem;padding:0;flex:none;}
+  .stepper .val{font-size:2.4rem;color:var(--accent-warm);min-width:80px;text-align:center;}
+
+  .center{text-align:center;}
+  .muted{
+    color:var(--ink-soft);
+    font-size:1rem;
+  }
+  input[type=text]{
+    font-family:inherit;font-weight:700;font-size:1.05rem;
+    background:#fff;color:var(--ink);
+    border:3px solid var(--border-dark);border-radius:10px;
+    padding:12px;width:100%;
+  }
+  input[type=number]{
+    font-family:inherit;font-weight:700;font-size:1.05rem;
+    background:#fff;color:var(--ink);
+    border:3px solid var(--border-dark);border-radius:10px;
+    padding:10px;width:90px;text-align:center;
+  }
+  .hidden{display:none!important;}
+  .flex-between{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  @media (max-width:420px){
+    .slot{width:36px;height:36px;}
+    .stepper .pixel-btn{width:48px;height:48px;font-size:1.3rem;}
+    h1{font-size:1.6rem;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ============================================================
+   謙謙君子能量丸大冒險 — 遊戲主程式
+   ============================================================ */
+
+/* ---------------- 常數 ---------------- */
+const TOTAL_SLOTS = 24;
+const HEALTH_LEVELS = [
+  {min:10, max:24, emoji:"😊", label:"健康"},
+  {min:7,  max:9,  emoji:"😐", label:"有點累"},
+  {min:4,  max:6,  emoji:"😟", label:"很累"},
+  {min:0,  max:3,  emoji:"😫", label:"生病了"},
+];
+function getHealth(pillCount){
+  for(const h of HEALTH_LEVELS){ if(pillCount>=h.min && pillCount<=h.max) return h; }
+  return HEALTH_LEVELS[HEALTH_LEVELS.length-1];
+}
+const WEEKDAY_NAMES = ["星期一","星期二","星期三","星期四","星期五","星期六","星期日"];
+const DAYS_PER_WEEK = 7;
+const TOTAL_WEEKS = 9;
+const TOTAL_DAYS = DAYS_PER_WEEK * TOTAL_WEEKS;
+
+/* ---------------- 能量丸圖示（直接使用 emoji） ---------------- */
+const SPRITE_EMOJI = {fire:"🔥", gem:"💎", candy:"🍬"};
+function makeSpriteIcon(kind, displayPx){
+  const span = el("span", {class:"sprite-emoji", style:"font-size:"+(displayPx||26)+"px;"});
+  span.textContent = SPRITE_EMOJI[kind] || "❓";
+  return span;
+}
+function spriteForType(t){ return t==="S" ? "gem" : (t==="C" ? "candy" : "fire"); }
+
+/* ---------------- 核心運算引擎 ---------------- */
+// sequence: array of 'S'(能力大補丸) | 'C'(神奇泡泡糖)，依排列順序逐格執行
+function getCandyEffect(table, pos){
+  if(table === "N"){
+    if(pos === 1) return 1;
+    if(pos === 2) return 0.5;
+    return -1;
+  }else{ // tainted table
+    if(pos === 1) return 0.5;
+    if(pos === 2) return 0.25;
+    return -1;
+  }
+}
+
+function simulateDay(pillCount, sequence){
+  const cap = pillCount;
+  let power = cap;
+  let ability = 0;
+  let streak = 0;
+  let tainted = false;
+  let streakTable = null;
+  const steps = [];
+  for(const item of sequence){
+    if(item === "S"){
+      streak = 0; streakTable = null;
+      let gained = 0;
+      if(power >= 1){ power -= 1; ability += 1; gained = 1; }
+      steps.push({type:"S", power, ability, gained, wasted: gained===0});
+    }else if(item === "C"){
+      if(streak === 0) streakTable = tainted ? "T" : "N";
+      streak += 1;
+      const effect = getCandyEffect(streakTable, streak);
+      power = Math.min(cap, Math.max(0, power + effect));
+      if(streak >= 2) tainted = true;
+      steps.push({type:"C", power, ability, effect, tainted});
+    }
+  }
+  return {cap, finalPower:power, ability, tainted, steps};
+}
+
+function summarizeDay(pillCount, sequence){
+  const sim = simulateDay(pillCount, sequence);
+  const health = getHealth(pillCount);
+  return {
+    pillCount,
+    sequence: sequence.slice(),
+    cap: sim.cap,
+    finalPower: sim.finalPower,
+    abilityGain: sim.ability,
+    tainted: sim.tainted,
+    steps: sim.steps,
+    health,
+  };
+}
+
+// 套用固定配方跑 N 天（污點狀態每日重置，配方固定；多人模式用）
+function simulateDaysFixed(pillCount, sequence, totalDays){
+  totalDays = totalDays || TOTAL_DAYS;
+  const daily = summarizeDay(pillCount, sequence);
+  const cumulative = [];
+  let total = 0;
+  let sickDays = 0;
+  for(let d=1; d<=totalDays; d++){
+    total += daily.abilityGain;
+    cumulative.push(Math.round(total*100)/100);
+    if(daily.health.emoji === "😫") sickDays++;
+  }
+  return {
+    dailyAbilityGain: daily.abilityGain,
+    cumulative,
+    sickDays,
+    total: cumulative[cumulative.length-1],
+    avgPerDay: Math.round((cumulative[cumulative.length-1]/totalDays)*100)/100,
+    health: daily.health,
+    tainted: daily.tainted,
+  };
+}
+
+// 重複一整週（7天配方）跑 9 週（污點狀態每日重置，配方固定；個人模式用）
+function simulateWeeksFixed(weekHistory, weeks){
+  weeks = weeks || TOTAL_WEEKS;
+  const cumulative = [];
+  let total = 0;
+  let sickDays = 0;
+  let taintedDays = 0;
+  for(let w=0; w<weeks; w++){
+    for(let d=0; d<weekHistory.length; d++){
+      const day = weekHistory[d];
+      total += day.abilityGain;
+      cumulative.push(Math.round(total*100)/100);
+      if(day.health.emoji === "😫") sickDays++;
+      if(day.tainted) taintedDays++;
+    }
+  }
+  return {
+    cumulative,
+    sickDays,
+    taintedDays,
+    total: cumulative[cumulative.length-1],
+    totalDays: cumulative.length,
+    avgPerDay: Math.round((cumulative[cumulative.length-1]/cumulative.length)*100)/100,
+  };
+}
+
+/* ---------------- DOM 小工具 ---------------- */
+function el(tag, attrs, ...children){
+  const e = document.createElement(tag);
+  attrs = attrs || {};
+  for(const k in attrs){
+    const v = attrs[k];
+    if(k === "class") e.className = v;
+    else if(k === "html") e.innerHTML = v;
+    else if(k.indexOf("on") === 0 && typeof v === "function") e.addEventListener(k.slice(2).toLowerCase(), v);
+    else e.setAttribute(k, v);
+  }
+  for(const c of children.flat()){
+    if(c === null || c === undefined) continue;
+    if(typeof c === "string" || typeof c === "number") e.appendChild(document.createTextNode(String(c)));
+    else e.appendChild(c);
+  }
+  return e;
+}
+function renderBattery(cap, power){
+  const wrap = el("div", {class:"battery-wrap"});
+  const shown = Math.round(power);
+  for(let i=0;i<cap;i++){
+    const cell = el("div", {class:"battery-cell"});
+    if(i < shown) cell.classList.add(cap>0 && shown<=Math.ceil(cap*0.25) ? "low" : "on");
+    wrap.appendChild(cell);
+  }
+  if(cap===0) wrap.appendChild(el("div",{class:"muted"},"（沒有電力）"));
+  return wrap;
+}
+
+/* ---------------- App 路由 ---------------- */
+const App = { root: document.getElementById("app") };
+function goto(node){
+  App.root.innerHTML = "";
+  App.root.appendChild(node);
+  window.scrollTo(0,0);
+}
+
+/* ---------------- 畫面：封面 ---------------- */
+function screenCover(){
+  const wrap = el("div", {class:"screen center-screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "🌟 謙謙君子 能量丸大冒險"));
+
+  const btnRow = el("div", {class:"btn-row"});
+  btnRow.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenScenarioIntro(()=>goto(screenRules(()=>goto(screenPersonalDay(1,[])) )) ))}, "👤 單人模式"));
+  btnRow.appendChild(el("button", {class:"pixel-btn block gem", onclick:()=>goto(screenScenarioIntro(()=>goto(screenRules(()=>goto(screenMpSetup())) )) )}, "👥 多人模式"));
+  wrap.appendChild(btnRow);
+  return wrap;
+}
+
+/* ---------------- 畫面：情境介紹（第二頁） ---------------- */
+function screenScenarioIntro(onNext){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "🌟 故事開始"));
+
+  const panel = el("div", {class:"panel"});
+  panel.appendChild(el("p", {}, "每天，你都有 24 個位置可以放能量丸。能量丸共有三種："));
+
+  const items = [
+    {kind:"fire", name:"元氣充電寶", func:"當天的電力", tip:"吃飽睡足才有力氣做事、保持健康"},
+    {kind:"gem", name:"能力大補丸", func:"消耗電力換取能力值", tip:"花時間學習，能力讓你越來越強"},
+    {kind:"candy", name:"神奇泡泡糖", func:"快速補充電力，但吃太多會失靈", tip:"休息玩樂是為了走更長遠的路，但使用太多效果會降低"},
+  ];
+  for(const it of items){
+    const card = el("div", {class:"card pill-card"});
+    card.appendChild(makeSpriteIcon(it.kind, 56));
+    const textWrap = el("div", {class:"pill-card-text"});
+    textWrap.appendChild(el("div", {class:"pill-name"}, it.name));
+    textWrap.appendChild(el("div", {class:"pill-field"}, el("b", {}, "功能："), it.func));
+    textWrap.appendChild(el("div", {class:"pill-field"}, el("b", {}, "提示："), it.tip));
+    card.appendChild(textWrap);
+    panel.appendChild(card);
+  }
+  wrap.appendChild(panel);
+
+  const btnRow = el("div", {class:"btn-row"});
+  btnRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:()=>goto(screenCover())}, "◀ 回到封面"));
+  btnRow.appendChild(el("button", {class:"pixel-btn fire", onclick:onNext}, "下一步 ▶"));
+  wrap.appendChild(btnRow);
+  return wrap;
+}
+
+/* ---------------- 畫面：遊戲規則（第三頁） ---------------- */
+function screenRules(onNext){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "📜 遊戲規則"));
+  const panel = el("div", {class:"panel"});
+  panel.appendChild(el("p", {}, "每天的 24 顆能量丸，分兩個步驟分配："));
+  panel.appendChild(el("p", {}, "① 先決定要吃幾顆 🔥元氣充電寶，決定今天的電力上限。"));
+  panel.appendChild(el("p", {}, "② 剩下的格子，自己決定要吃 💎能力大補丸 還是 🍬神奇泡泡糖，並排出順序。"));
+  panel.appendChild(el("p", {}, "⚠️ 小提醒："));
+  const tipList = el("ul", {class:"tip-list"});
+  ["元氣充電寶吃太少，容易不舒服","沒有電力的時候吃大補丸，也補不到能力","泡泡糖一次吃太多顆，效果會大打折扣"].forEach(t=>{
+    tipList.appendChild(el("li", {}, t));
+  });
+  panel.appendChild(tipList);
+  panel.appendChild(el("p", {}, "邊排邊注意畫面上電力和能力值的變化喔！"));
+  wrap.appendChild(panel);
+
+  const btnRow = el("div", {class:"btn-row"});
+  btnRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:()=>goto(screenScenarioIntro(onNext))}, "◀ 上一步"));
+  btnRow.appendChild(el("button", {class:"pixel-btn fire", onclick:onNext}, "開始遊戲 ▶"));
+  wrap.appendChild(btnRow);
+  return wrap;
+}
+
+/* ---------------- 共用元件：stat box ---------------- */
+function makeStatBox(label, value){
+  const box = el("div", {class:"stat-box"});
+  box.appendChild(el("span", {class:"num"}, String(value)));
+  box.appendChild(el("span", {class:"lbl"}, label));
+  return box;
+}
+
+/* ---------------- 共用元件：24格分配（電力＋排列同頁） ---------------- */
+function renderAllocation(opts){
+  const state = {
+    pillCount: opts.initialPillCount != null ? opts.initialPillCount : 0,
+    sequence: opts.initialSequence ? opts.initialSequence.slice() : [],
+  };
+  const container = el("div", {class:"screen"});
+
+  function ensureLen(){
+    const len = TOTAL_SLOTS - state.pillCount;
+    if(state.sequence.length > len) state.sequence = state.sequence.slice(0, len);
+    while(state.sequence.length < len) state.sequence.push(null);
+  }
+  function setPill(n){ state.pillCount = Math.max(0, Math.min(24, n)); ensureLen(); paint(); }
+  function fillNext(type){
+    const idx = state.sequence.indexOf(null);
+    if(idx === -1) return;
+    state.sequence[idx] = type;
+    paint();
+  }
+  function toggleSlot(idx){
+    if(state.sequence[idx] == null) return;
+    state.sequence[idx] = state.sequence[idx] === "S" ? "C" : "S";
+    paint();
+  }
+  function clearSeq(){ state.sequence = state.sequence.map(()=>null); paint(); }
+  function applyPrevious(){
+    if(!opts.previousDay) return;
+    state.pillCount = opts.previousDay.pillCount;
+    state.sequence = opts.previousDay.sequence.slice();
+    ensureLen();
+    paint();
+  }
+
+  function paint(){
+    ensureLen();
+    container.innerHTML = "";
+    container.appendChild(el("h1", {class:"center"}, opts.title));
+    if(opts.subtitle) container.appendChild(el("p", {class:"muted center"}, opts.subtitle));
+
+    if(opts.onBack || opts.previousDay){
+      const topRow = el("div", {class:"btn-row"});
+      if(opts.onBack) topRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:opts.onBack}, "◀ 回到上一天"));
+      if(opts.previousDay) topRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:applyPrevious}, "🔁 套用前一天設定"));
+      container.appendChild(topRow);
+    }
+
+    const filled = state.sequence.filter(Boolean);
+    const sim = simulateDay(state.pillCount, filled);
+
+    const statPanel = el("div", {class:"panel"});
+    const statRow = el("div", {class:"stat-row"});
+    statRow.appendChild(makeStatBox("⚡ 目前電力", sim.finalPower+" / "+state.pillCount));
+    statRow.appendChild(makeStatBox("💪 目前能力值", sim.ability));
+    statPanel.appendChild(statRow);
+    if(state.pillCount > 0) statPanel.appendChild(renderBattery(state.pillCount, sim.finalPower));
+    container.appendChild(statPanel);
+
+    const panel1 = el("div", {class:"panel"});
+    panel1.appendChild(el("h3", {class:"center"}, "🔥 元氣充電寶（今日儲備電力）"));
+    const stepper = el("div", {class:"stepper"});
+    stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>setPill(state.pillCount-5)}, "-5"));
+    stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>setPill(state.pillCount-1)}, "-1"));
+    stepper.appendChild(el("div", {class:"val"}, String(state.pillCount)));
+    stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>setPill(state.pillCount+1)}, "+1"));
+    stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>setPill(state.pillCount+5)}, "+5"));
+    panel1.appendChild(stepper);
+    container.appendChild(panel1);
+
+    const panel2 = el("div", {class:"panel"});
+    panel2.appendChild(el("h3", {class:"center"}, "排列能量丸順序：💎大補丸／🍬泡泡糖"));
+    panel2.appendChild(el("p", {class:"muted center"}, "點按鈕依序填入下一格；點已填好的格子可切換種類。"));
+    const slotRow = el("div", {class:"slot-row"});
+    if(state.sequence.length === 0){
+      slotRow.appendChild(el("div", {class:"muted"}, "（電力全部用在充電，沒有剩餘格子）"));
+    }else{
+      const nextIdx = state.sequence.indexOf(null);
+      state.sequence.forEach((s, idx)=>{
+        const slot = el("div", {class:"slot"+(s?" filled":"")+(idx===nextIdx?" next-hint":"")});
+        if(s){
+          slot.appendChild(makeSpriteIcon(spriteForType(s), 28));
+          slot.addEventListener("click", ()=>toggleSlot(idx));
+        }
+        slotRow.appendChild(slot);
+      });
+    }
+    panel2.appendChild(slotRow);
+
+    const btnRow = el("div", {class:"btn-row"});
+    btnRow.appendChild(el("button", {class:"pixel-btn gem", onclick:()=>fillNext("S")}, "💎 大補丸"));
+    btnRow.appendChild(el("button", {class:"pixel-btn candy", onclick:()=>fillNext("C")}, "🍬 泡泡糖"));
+    panel2.appendChild(btnRow);
+    container.appendChild(panel2);
+
+    if(sim.tainted){
+      container.appendChild(el("div", {class:"warn-box"}, "⚠️ 連續吃泡泡糖太多次，已經「硬撐」了！效果大打折扣，今天很難回到最佳狀態。"));
+    }
+
+    const btnRow2 = el("div", {class:"btn-row"});
+    btnRow2.appendChild(el("button", {class:"pixel-btn secondary", onclick:clearSeq}, "🔄 清空重排"));
+    const allFilled = state.sequence.length===0 || state.sequence.every(s=>s!=null);
+    const confirmBtn = el("button", {class:"pixel-btn fire", onclick:()=>opts.onConfirm(state.pillCount, state.sequence.slice())}, opts.confirmLabel || "結算 ✔");
+    if(!allFilled) confirmBtn.disabled = true;
+    btnRow2.appendChild(confirmBtn);
+    container.appendChild(btnRow2);
+  }
+
+  ensureLen();
+  paint();
+  return container;
+}
+
+/* ---------------- 圖表繪製（Canvas，無外部圖表庫） ---------------- */
+function chartWidth(canvas){
+  if(canvas && canvas.parentElement){
+    const cw = canvas.parentElement;
+    const cs = getComputedStyle(cw);
+    const w = cw.clientWidth - parseFloat(cs.paddingLeft||0) - parseFloat(cs.paddingRight||0);
+    if(w > 0) return Math.floor(w);
+  }
+  return Math.max(220, Math.min(window.innerWidth-64, 640));
+}
+function drawBarChart(canvas, data, opts){
+  opts = opts || {};
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = chartWidth(canvas), cssH = opts.height || 200;
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+  canvas.style.width = cssW+"px"; canvas.style.height = cssH+"px";
+  const ctx = canvas.getContext("2d"); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+  const padL=34, padR=10, padT=18, padB=26;
+  const plotW = cssW-padL-padR, plotH = cssH-padT-padB;
+  const vals = data.map(d=>d.value);
+  const maxVal = Math.max(1, ...vals);
+  const minVal = Math.min(0, ...vals);
+  const range = (maxVal-minVal) || 1;
+  const zeroY = padT + plotH*(maxVal-0)/range;
+  ctx.strokeStyle = "#b89a6e"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, zeroY); ctx.lineTo(padL+plotW, zeroY); ctx.stroke();
+  const bw = plotW/data.length;
+  data.forEach((d,i)=>{
+    const x = padL + i*bw + bw*0.16;
+    const w = bw*0.68;
+    const barH = plotH*Math.abs(d.value)/range;
+    const y = d.value>=0 ? zeroY-barH : zeroY;
+    ctx.fillStyle = d.value>=0 ? "#4ecca3" : "#ff5c6c";
+    ctx.fillRect(x,y,w,Math.max(1,barH));
+    ctx.fillStyle = "#4a3568"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(d.label, x+w/2, cssH-9);
+    ctx.fillText(String(d.value), x+w/2, d.value>=0 ? Math.max(14,y-6) : y+barH+16);
+  });
+}
+function drawLineChart(canvas, series, opts){
+  opts = opts || {};
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = chartWidth(canvas), cssH = opts.height || 220;
+  canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+  canvas.style.width = cssW+"px"; canvas.style.height = cssH+"px";
+  const ctx = canvas.getContext("2d"); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+  const padL=42, padR=12, padT=14, padB=24;
+  const plotW = cssW-padL-padR, plotH = cssH-padT-padB;
+  const allVals = series.reduce((a,s)=>a.concat(s.points), []);
+  const maxVal = Math.max(1, ...allVals);
+  const minVal = Math.min(0, ...allVals);
+  const range = (maxVal-minVal) || 1;
+  const n = Math.max(...series.map(s=>s.points.length));
+  function xAt(i){ return padL + (n<=1?0:plotW*i/(n-1)); }
+  function yAt(v){ return padT + plotH*(1-(v-minVal)/range); }
+  ctx.strokeStyle = "#e3cda3"; ctx.lineWidth = 1;
+  for(let g=0; g<=4; g++){
+    const yy = padT + plotH*g/4;
+    ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(padL+plotW,yy); ctx.stroke();
+    const val = maxVal - range*g/4;
+    ctx.fillStyle="#4a3568"; ctx.font="bold 13px sans-serif"; ctx.textAlign="right";
+    ctx.fillText(val.toFixed(0), padL-8, yy+4);
+  }
+  ctx.strokeStyle = "#b89a6e";
+  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
+  series.forEach(s=>{
+    ctx.strokeStyle = s.color; ctx.lineWidth = 3;
+    ctx.beginPath();
+    s.points.forEach((v,i)=>{ const x=xAt(i), y=yAt(v); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.stroke();
+  });
+  ctx.fillStyle = "#4a3568"; ctx.font = "bold 13px sans-serif"; ctx.textAlign = "center";
+  const step = Math.max(1, Math.round(n/6));
+  for(let i=0;i<n;i+=step){
+    ctx.fillText("第"+(i+1)+"天", xAt(i), padT+plotH+18);
+  }
+}
+
+/* ---------------- 個人模式：一週試煉（星期一～星期日） ---------------- */
+function screenPersonalDay(dayNum, history){
+  const prev = history.length ? history[history.length-1] : null;
+  return renderAllocation({
+    title: WEEKDAY_NAMES[dayNum-1],
+    previousDay: prev,
+    confirmLabel: "結算 ▶",
+    onBack: dayNum>1 ? ()=>goto(screenPersonalSettlement(dayNum-1, history)) : null,
+    onConfirm: (pillCount, sequence)=>{
+      const summary = summarizeDay(pillCount, sequence);
+      goto(screenPersonalSettlement(dayNum, history.concat([summary])));
+    },
+  });
+}
+
+function screenPersonalSettlement(dayNum, history){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, WEEKDAY_NAMES[dayNum-1]+" 結算"));
+
+  const dots = el("div", {class:"day-dots"});
+  for(let i=1;i<=7;i++) dots.appendChild(el("div", {class:"day-dot"+(i<dayNum?" done":i===dayNum?" active":"")}));
+  wrap.appendChild(dots);
+
+  const today = history[dayNum-1];
+  const panel = el("div", {class:"panel"});
+  const hr = el("div", {class:"health-row", style:"justify-content:center;"});
+  hr.appendChild(el("span", {class:"health-badge"}, today.health.emoji));
+  hr.appendChild(el("span", {}, today.health.label+"（元氣充電寶 "+today.pillCount+" 顆）"));
+  panel.appendChild(hr);
+  panel.appendChild(renderBattery(today.cap, today.finalPower));
+
+  const statRow = el("div", {class:"stat-row"});
+  statRow.appendChild(makeStatBox("今日能力值增量", "+"+today.abilityGain));
+  const cum = history.reduce((s,d)=>s+d.abilityGain, 0);
+  statRow.appendChild(makeStatBox("累積總能力值", String(cum)));
+  panel.appendChild(statRow);
+
+  if(today.tainted) panel.appendChild(el("div", {class:"warn-box"}, "⚠️ 今天靠泡泡糖硬撐，恢復效果大打折扣！"));
+  wrap.appendChild(panel);
+
+  if(dayNum < 7){
+    wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalDay(dayNum+1, history))}, "前往"+WEEKDAY_NAMES[dayNum]+" ▶"));
+  }else{
+    wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalOverview(history))}, "查看本週總覽 📊"));
+  }
+  return wrap;
+}
+
+function screenPersonalOverview(history){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "📊 本週總覽"));
+
+  const panel = el("div", {class:"panel"});
+  panel.appendChild(el("h3", {}, "每日能力值增量"));
+  const canvas = el("canvas", {class:"chart-canvas"});
+  panel.appendChild(el("div", {class:"chart-wrap"}, canvas));
+  wrap.appendChild(panel);
+
+  const healthPanel = el("div", {class:"panel"});
+  healthPanel.appendChild(el("h3", {}, "健康狀態總覽"));
+  const hrow = el("div", {class:"stat-row"});
+  history.forEach((d,i)=>{
+    const box = el("div", {class:"stat-box"});
+    box.appendChild(el("span", {class:"health-badge"}, d.health.emoji));
+    box.appendChild(el("div", {class:"lbl"}, WEEKDAY_NAMES[i]));
+    hrow.appendChild(box);
+  });
+  healthPanel.appendChild(hrow);
+  const weekTotal = history.reduce((s,d)=>s+d.abilityGain, 0);
+  const totalRow = el("div", {class:"stat-row"});
+  totalRow.appendChild(makeStatBox("本週累積能量值", String(weekTotal)));
+  healthPanel.appendChild(totalRow);
+  wrap.appendChild(healthPanel);
+
+  wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalWeekResult(history))}, "重複這一週，看看"+TOTAL_WEEKS+"週後 ▶"));
+
+  requestAnimationFrame(()=>{
+    drawBarChart(canvas, history.map((d,i)=>({label:WEEKDAY_NAMES[i][2], value:d.abilityGain})), {height:190});
+  });
+  return wrap;
+}
+
+function buildWeekVerdictText(weekHistory, res){
+  const anySick = weekHistory.some(d=>d.health.emoji === "😫");
+  const anyTainted = weekHistory.some(d=>d.tainted);
+  const allRestHeavy = weekHistory.every(d=>d.pillCount >= 20);
+  if(anySick) return "這一週有幾天元氣充電寶吃太少，重複"+TOTAL_WEEKS+"週下來會一直處於生病狀態，能力值雖然還是會累積，但身體健康付出了很大代價！";
+  if(anyTainted) return "這一週有幾天靠泡泡糖硬撐，恢復效果打了折扣，重複"+TOTAL_WEEKS+"週下來，能力成長比穩穩交替安排來得慢。";
+  if(allRestHeavy) return "這一週把大量時間花在休息充電，身體很健康，但能力值幾乎沒有成長機會，重複"+TOTAL_WEEKS+"週也是一樣。";
+  return "這一週在休息與學習之間取得不錯的平衡，重複"+TOTAL_WEEKS+"週累積下來，能力值穩穩成長！";
+}
+
+function screenPersonalWeekResult(weekHistory){
+  const res = simulateWeeksFixed(weekHistory, TOTAL_WEEKS);
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "🏁 重複 "+TOTAL_WEEKS+" 週後的樣子"));
+  wrap.appendChild(el("p", {class:"muted center"}, "把這一週（星期一～星期日）的配方，重複 "+TOTAL_WEEKS+" 週（共 "+res.totalDays+" 天），看看長期會變成什麼樣子。"));
+
+  const panel = el("div", {class:"panel"});
+  panel.appendChild(el("h3", {}, "累積能力值成長曲線"));
+  const canvas = el("canvas", {class:"chart-canvas"});
+  panel.appendChild(el("div", {class:"chart-wrap"}, canvas));
+  wrap.appendChild(panel);
+
+  const statRow = el("div", {class:"stat-row"});
+  statRow.appendChild(makeStatBox(res.totalDays+"天總能力值", String(res.total)));
+  statRow.appendChild(makeStatBox("平均每日增量", String(res.avgPerDay)));
+  statRow.appendChild(makeStatBox("生病天數", res.sickDays+" / "+res.totalDays));
+  wrap.appendChild(statRow);
+
+  wrap.appendChild(el("div", {class:"panel"}, el("p", {}, buildWeekVerdictText(weekHistory, res))));
+
+  const btnRow = el("div", {class:"btn-row"});
+  btnRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:()=>goto(screenCover())}, "回到封面"));
+  btnRow.appendChild(el("button", {class:"pixel-btn fire", onclick:()=>goto(screenCover())}, "重新開始"));
+  wrap.appendChild(btnRow);
+
+  requestAnimationFrame(()=>{
+    drawLineChart(canvas, [{label:"能力值", color:"#4ecca3", points:res.cumulative}], {height:220});
+  });
+  return wrap;
+}
+
+/* ---------------- 多人模式 ---------------- */
+function screenMpSetup(){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "👥 多人模式設定"));
+
+  const panel = el("div", {class:"panel"});
+  panel.appendChild(el("p", {}, "老師請設定本次要比較幾組（1~6組），同一台裝置依序輪流輸入每一組的配方："));
+  let n = 3;
+  const valDiv = el("div", {class:"val"}, String(n));
+  const stepper = el("div", {class:"stepper"});
+  stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>{ n=Math.max(1,n-1); valDiv.textContent=String(n); }}, "-1"));
+  stepper.appendChild(valDiv);
+  stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>{ n=Math.min(6,n+1); valDiv.textContent=String(n); }}, "+1"));
+  panel.appendChild(stepper);
+  panel.appendChild(el("button", {class:"pixel-btn block gem", onclick:()=>goto(screenMpGroupInput(1, n, []))}, "開始輸入各組配方 ▶"));
+  wrap.appendChild(panel);
+
+  wrap.appendChild(el("button", {class:"pixel-btn block secondary", onclick:()=>goto(screenCover())}, "◀ 回到封面"));
+  return wrap;
+}
+
+function screenMpGroupInput(groupIdx, totalGroups, groups){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "第 "+groupIdx+" / "+totalGroups+" 組　配方輸入"));
+
+  const namePanel = el("div", {class:"panel panel-tight"});
+  namePanel.appendChild(el("h3", {}, "小組／角色名稱"));
+  const nameInput = el("input", {type:"text", value:"第"+groupIdx+"組"});
+  namePanel.appendChild(nameInput);
+  wrap.appendChild(namePanel);
+
+  const allocation = renderAllocation({
+    title: "排列 24 格配方",
+    subtitle: "先決定元氣顆數，再排列大補丸／泡泡糖順序（直接決定長期配方）",
+    confirmLabel: groupIdx < totalGroups ? "確定，下一組 ▶" : "確定，查看比較結果 🏁",
+    onConfirm: (pillCount, sequence)=>{
+      const name = (nameInput.value || "").trim() || ("第"+groupIdx+"組");
+      const summary = summarizeDay(pillCount, sequence);
+      summary.name = name;
+      const newGroups = groups.concat([summary]);
+      if(groupIdx < totalGroups) goto(screenMpGroupInput(groupIdx+1, totalGroups, newGroups));
+      else goto(screenMpResults(newGroups));
+    },
+  });
+  wrap.appendChild(allocation);
+  return wrap;
+}
+
+function screenMpResults(groups){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, "🏆 "+TOTAL_DAYS+" 天（"+TOTAL_WEEKS+"週）比較結果"));
+
+  const colors = ["#4ecca3","#ff8a3d","#6f7bff","#ff8fc6","#ffd93d","#ff5c6c"];
+  const results = groups.map((g,i)=>({
+    name: g.name, color: colors[i%colors.length],
+    res: simulateDaysFixed(g.pillCount, g.sequence, TOTAL_DAYS), summary: g,
+  }));
+
+  const panel = el("div", {class:"panel"});
+  panel.appendChild(el("h3", {}, TOTAL_DAYS+"天累積能力值成長曲線"));
+  const canvas = el("canvas", {class:"chart-canvas"});
+  panel.appendChild(el("div", {class:"chart-wrap"}, canvas));
+  const legend = el("div", {class:"legend"});
+  results.forEach(r=>{
+    const item = el("span", {});
+    item.appendChild(el("span", {class:"legend-dot", style:"background:"+r.color}));
+    item.appendChild(document.createTextNode(r.name));
+    legend.appendChild(item);
+  });
+  panel.appendChild(legend);
+  wrap.appendChild(panel);
+
+  const tablePanel = el("div", {class:"panel"});
+  tablePanel.appendChild(el("h3", {}, "各組生病天數統計"));
+  const table = el("table", {class:"cmp-table"});
+  const thead = el("tr", {});
+  ["小組","元氣顆數",TOTAL_DAYS+"天總能力值","生病天數","曾硬撐"].forEach(h=>thead.appendChild(el("th", {}, h)));
+  table.appendChild(thead);
+  results.forEach(r=>{
+    const tr = el("tr", {});
+    tr.appendChild(el("td", {}, r.name));
+    tr.appendChild(el("td", {}, String(r.summary.pillCount)));
+    tr.appendChild(el("td", {}, String(r.res.total)));
+    tr.appendChild(el("td", {}, r.res.sickDays+" / "+TOTAL_DAYS));
+    tr.appendChild(el("td", {}, r.res.tainted ? "是" : "否"));
+    table.appendChild(tr);
+  });
+  tablePanel.appendChild(table);
+  wrap.appendChild(tablePanel);
+
+  const btnRow = el("div", {class:"btn-row"});
+  btnRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:()=>goto(screenCover())}, "回到封面"));
+  btnRow.appendChild(el("button", {class:"pixel-btn fire", onclick:()=>goto(screenCover())}, "重新開始"));
+  wrap.appendChild(btnRow);
+
+  requestAnimationFrame(()=>{
+    drawLineChart(canvas, results.map(r=>({label:r.name, color:r.color, points:r.res.cumulative})), {height:230});
+  });
+  return wrap;
+}
+
+/* === SCREENS_MARKER (新畫面函式請插入於此標記之前) === */
+
+/* ---------------- 初始化 ---------------- */
+goto(screenCover());
+</script>
+</body>
+</html>
