@@ -743,32 +743,41 @@ function dayStatusText(day){
   return labels.length ? labels.join("　") : "😊 正常";
 }
 
-// 63天結算：四個逐日分類（依序檢查，互斥）＋超強戰鬥士總量門檻（獨立）
-const TIER_LABELS = {
-  time: "時間掌控小尖兵",
-  hospital: "身體垮掉送醫院",
-  lazy: "耍廢天兵",
-  needsWork: "待加強訓練兵",
+// 63天結算：能力分數（累積能力值）與不良習慣天數，兩者各自獨立判定、互不影響
+const ABILITY_TIER_LABELS = {
+  superFighter: "超強戰鬥士",
+  vanguard: "能量小尖兵",
+  rookie: "能力菜鳥",
 };
-function computeDayCategory(day){
-  const effectiveSupplementCount = day.steps.filter(s=>s.type==='S' && !s.wasted).length;
-  const candyCount = day.sequence.filter(s=>s==='C').length;
-  if(day.pillCount>=10 || effectiveSupplementCount>=8) return "time";
-  if(day.pillCount<8) return "hospital";
-  if(candyCount>5) return "lazy";
-  return "needsWork";
+function computeAbilityTier(total){
+  if(total >= 450) return "superFighter";
+  if(total >= 300) return "vanguard";
+  return "rookie";
 }
-// cycle：會重複的一組天數摘要（個人模式為7天一週；多人模式為單一天）；repeats：重複次數
+// 兩項不良習慣各自獨立判定，同一天可以同時符合兩項，互不排斥
+function computeDayBadHabits(day){
+  const supplementCount = day.sequence.filter(s=>s==='S').length;
+  const candyCount = day.sequence.filter(s=>s==='C').length;
+  return {
+    collapsed: day.pillCount<10 || supplementCount>day.pillCount, // 累垮送醫院
+    lazy: candyCount>=5, // 耍廢天兵
+  };
+}
+// cycle：會重複的一組天數摘要（個人模式為7天一週；多人模式也是7天一週）；repeats：重複次數（週數）
+// 能力值為純累加（不扣分）；不良習慣天數另外獨立統計，不影響能力分數
 function computeFinalStats(cycle, repeats){
   const cumulative = [];
   let total = 0;
-  const counts = {time:0, hospital:0, lazy:0, needsWork:0};
+  let collapsedDays = 0;
+  let lazyDays = 0;
   for(let r=0; r<repeats; r++){
     for(let i=0;i<cycle.length;i++){
       const day = cycle[i];
       total += day.abilityGain;
       cumulative.push(Math.round(total*100)/100);
-      counts[computeDayCategory(day)]++;
+      const habits = computeDayBadHabits(day);
+      if(habits.collapsed) collapsedDays++;
+      if(habits.lazy) lazyDays++;
     }
   }
   const finalTotal = cumulative[cumulative.length-1];
@@ -776,16 +785,15 @@ function computeFinalStats(cycle, repeats){
     cumulative,
     total: finalTotal,
     totalDays: cumulative.length,
-    achievedSuperFighter: finalTotal > 400,
-    counts,
+    abilityTier: computeAbilityTier(finalTotal),
+    collapsedDays,
+    lazyDays,
   };
 }
-function renderTierStats(counts){
+function renderBadHabitStats(stats){
   const row = el("div", {class:"stat-row"});
-  row.appendChild(makeStatChip(TIER_LABELS.time, counts.time+" 天"));
-  row.appendChild(makeStatChip(TIER_LABELS.hospital, counts.hospital+" 天"));
-  row.appendChild(makeStatChip(TIER_LABELS.lazy, counts.lazy+" 天"));
-  row.appendChild(makeStatChip(TIER_LABELS.needsWork, counts.needsWork+" 天"));
+  row.appendChild(makeStatChip("累垮送醫院", stats.collapsedDays+" 天"));
+  row.appendChild(makeStatChip("耍廢天兵", stats.lazyDays+" 天"));
   return row;
 }
 
@@ -844,16 +852,14 @@ function screenPersonalWeekResult(weekHistory){
   panel.appendChild(el("div", {class:"chart-wrap"}, canvas));
   wrap.appendChild(panel);
 
-  if(stats.achievedSuperFighter){
-    const badge = el("div", {class:"panel center achieve-badge"});
-    badge.appendChild(el("h2", {}, "🏆 達成超強戰鬥士！"));
-    badge.appendChild(el("p", {}, stats.totalDays+"天總累積能力值超過400點，休息和學習都安排得很好！"));
-    wrap.appendChild(badge);
-  }
+  const isSuperFighter = stats.abilityTier === "superFighter";
+  const tierPanel = el("div", {class:"panel center"+(isSuperFighter?" achieve-badge":"")});
+  tierPanel.appendChild(el("h2", {}, (isSuperFighter?"🏆 ":"🏅 ")+ABILITY_TIER_LABELS[stats.abilityTier]));
+  wrap.appendChild(tierPanel);
 
   const statsPanel = el("div", {class:"panel"});
-  statsPanel.appendChild(el("h3", {}, stats.totalDays+"天分類天數統計"));
-  statsPanel.appendChild(renderTierStats(stats.counts));
+  statsPanel.appendChild(el("h3", {}, stats.totalDays+"天不良習慣天數統計"));
+  statsPanel.appendChild(renderBadHabitStats(stats));
   wrap.appendChild(statsPanel);
 
   const btnRow = el("div", {class:"btn-row"});
@@ -881,37 +887,84 @@ function screenMpSetup(){
   stepper.appendChild(valDiv);
   stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>{ n=Math.min(6,n+1); valDiv.textContent=String(n); }}, "+1"));
   panel.appendChild(stepper);
-  panel.appendChild(el("button", {class:"pixel-btn block gem", onclick:()=>goto(screenMpGroupInput(1, n, []))}, "開始輸入各組配方 ▶"));
+  panel.appendChild(el("button", {class:"pixel-btn block gem", onclick:()=>goto(screenMpGroupNameInput(1, n, []))}, "開始輸入各組配方 ▶"));
   wrap.appendChild(panel);
 
   wrap.appendChild(el("button", {class:"pixel-btn block secondary", onclick:()=>goto(screenCover())}, "◀ 回到封面"));
   return wrap;
 }
 
-function screenMpGroupInput(groupIdx, totalGroups, groups){
+function screenMpGroupNameInput(groupIdx, totalGroups, groups){
   const wrap = el("div", {class:"screen"});
-  wrap.appendChild(el("h1", {class:"center"}, "第 "+groupIdx+" / "+totalGroups+" 組　配方輸入"));
+  wrap.appendChild(el("h1", {class:"center"}, "第 "+groupIdx+" / "+totalGroups+" 組"));
 
-  const namePanel = el("div", {class:"panel panel-tight"});
+  const namePanel = el("div", {class:"panel"});
   namePanel.appendChild(el("h3", {}, "小組／角色名稱"));
   const nameInput = el("input", {type:"text", value:"第"+groupIdx+"組"});
   namePanel.appendChild(nameInput);
+  namePanel.appendChild(el("p", {class:"muted"}, "接下來請完整排列這一組星期一～星期日，共 7 天的配方。"));
+  namePanel.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>{
+    const name = (nameInput.value || "").trim() || ("第"+groupIdx+"組");
+    goto(screenMpGroupDay(groupIdx, totalGroups, groups, 1, [], name));
+  }}, "開始排列 ▶"));
   wrap.appendChild(namePanel);
+  return wrap;
+}
 
-  const allocation = renderAllocation({
-    title: "排列 24 格配方",
-    subtitle: "先決定元氣顆數，再排列大補丸／泡泡糖順序（直接決定長期配方）",
-    confirmLabel: groupIdx < totalGroups ? "確定，下一組 ▶" : "確定，查看比較結果 🏁",
+function screenMpGroupDay(groupIdx, totalGroups, groups, dayNum, dayHistory, groupName){
+  const prev = dayHistory.length ? dayHistory[dayHistory.length-1] : null;
+  return renderAllocation({
+    title: groupName+" ・ "+WEEKDAY_NAMES[dayNum-1],
+    previousDay: prev,
+    confirmLabel: "結算 ▶",
+    onBack: dayNum>1 ? ()=>goto(screenMpGroupSettlement(groupIdx, totalGroups, groups, dayNum-1, dayHistory, groupName)) : null,
     onConfirm: (pillCount, sequence)=>{
-      const name = (nameInput.value || "").trim() || ("第"+groupIdx+"組");
       const summary = summarizeDay(pillCount, sequence);
-      summary.name = name;
-      const newGroups = groups.concat([summary]);
-      if(groupIdx < totalGroups) goto(screenMpGroupInput(groupIdx+1, totalGroups, newGroups));
-      else goto(screenMpResults(newGroups));
+      goto(screenMpGroupSettlement(groupIdx, totalGroups, groups, dayNum, dayHistory.concat([summary]), groupName));
     },
   });
-  wrap.appendChild(allocation);
+}
+
+function screenMpGroupSettlement(groupIdx, totalGroups, groups, dayNum, dayHistory, groupName){
+  const wrap = el("div", {class:"screen"});
+  wrap.appendChild(el("h1", {class:"center"}, groupName+" ・ "+WEEKDAY_NAMES[dayNum-1]+" 結算"));
+
+  const dots = el("div", {class:"day-dots"});
+  for(let i=1;i<=7;i++) dots.appendChild(el("div", {class:"day-dot"+(i<dayNum?" done":i===dayNum?" active":"")}));
+  wrap.appendChild(dots);
+
+  const today = dayHistory[dayNum-1];
+  const cum = dayHistory.reduce((s,d)=>s+d.abilityGain, 0);
+
+  const statRow = el("div", {class:"stat-row"});
+  statRow.appendChild(makeStatChip("今日剩餘電量", today.finalPower));
+  statRow.appendChild(makeStatChip("今日能力增量", "+"+today.abilityGain));
+  statRow.appendChild(makeStatChip("累積總能力值", String(cum)));
+  wrap.appendChild(statRow);
+
+  const candyCount = today.sequence.filter(s=>s==='C').length;
+  const wastedCount = today.steps.filter(s=>s.type==='S' && s.wasted).length;
+  if(candyCount>0 || wastedCount>0){
+    const notePanel = el("div", {class:"panel"});
+    if(candyCount>0){
+      notePanel.appendChild(el("p", {}, "🍬 今天吃了 "+candyCount+" 顆神奇泡泡糖"+(today.tainted?"，連續吃太多次，效果打了折扣。":"。")));
+    }
+    if(wastedCount>0){
+      notePanel.appendChild(el("p", {}, "💎 有 "+wastedCount+" 次能力大補丸因為電力不足，沒有補到能力。"));
+    }
+    wrap.appendChild(notePanel);
+  }
+
+  if(dayNum < 7){
+    wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenMpGroupDay(groupIdx, totalGroups, groups, dayNum+1, dayHistory, groupName))}, "前往"+WEEKDAY_NAMES[dayNum]+" ▶"));
+  }else{
+    const newGroups = groups.concat([{name:groupName, week:dayHistory}]);
+    if(groupIdx < totalGroups){
+      wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenMpGroupNameInput(groupIdx+1, totalGroups, newGroups))}, "下一組 ▶"));
+    }else{
+      wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenMpResults(newGroups))}, "查看比較結果 🏁"));
+    }
+  }
   return wrap;
 }
 
@@ -922,7 +975,7 @@ function screenMpResults(groups){
   const colors = ["#4ecca3","#ff8a3d","#6f7bff","#ff8fc6","#ffd93d","#ff5c6c"];
   const results = groups.map((g,i)=>({
     name: g.name, color: colors[i%colors.length],
-    stats: computeFinalStats([g], TOTAL_DAYS),
+    stats: computeFinalStats(g.week, TOTAL_WEEKS),
   }));
 
   const panel = el("div", {class:"panel"});
@@ -940,13 +993,12 @@ function screenMpResults(groups){
   wrap.appendChild(panel);
 
   results.forEach(r=>{
-    const card = el("div", {class:"panel"});
+    const isSuperFighter = r.stats.abilityTier === "superFighter";
+    const card = el("div", {class:"panel"+(isSuperFighter?" achieve-badge":"")});
     card.appendChild(el("h3", {}, r.name));
     card.appendChild(makeStatChip(TOTAL_DAYS+"天總能力值", r.stats.total));
-    if(r.stats.achievedSuperFighter){
-      card.appendChild(el("p", {}, "🏆 達成超強戰鬥士！（總能力值超過400點）"));
-    }
-    card.appendChild(renderTierStats(r.stats.counts));
+    card.appendChild(el("p", {class:"center"}, (isSuperFighter?"🏆 ":"🏅 ")+ABILITY_TIER_LABELS[r.stats.abilityTier]));
+    card.appendChild(renderBadHabitStats(r.stats));
     wrap.appendChild(card);
   });
 
