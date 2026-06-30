@@ -92,6 +92,7 @@
     color:var(--ink);
   }
   .panel-tight{padding:12px 14px;}
+  .achieve-badge{background:linear-gradient(135deg,#fff0b3,#ffd166);border-color:var(--accent-warm);}
   .card{
     background:var(--bg-panel-light);
     border:2px solid var(--border-dark);
@@ -151,59 +152,58 @@
 
   /* ---------- stat row ---------- */
   .stat-row{display:flex;gap:12px;flex-wrap:wrap;}
-  .stat-box{
-    flex:1;min-width:130px;
-    background:var(--bg-panel-light);
-    border:2px solid var(--border-dark);
-    border-radius:12px;
-    padding:10px 12px;
-    text-align:center;
-    color:var(--ink);
-  }
-  .stat-box .num{font-size:1.9rem;color:var(--accent-warm);display:block;}
-  .stat-box .lbl{font-size:1rem;color:var(--ink-soft);}
 
-  /* ---------- slots (24格) ---------- */
+  /* ---------- compact stat chip (label above number, slim) ---------- */
+  .stat-chip{
+    flex:1;min-width:110px;
+    background:rgba(255,255,255,0.65);
+    border:2px solid var(--border-dark);
+    border-radius:14px;
+    padding:6px 12px;
+    text-align:center;
+  }
+  .stat-chip .chip-lbl{display:block;font-size:.92rem;color:var(--ink-soft);}
+  .stat-chip .chip-num{display:block;font-size:1.7rem;color:var(--accent-warm);font-weight:800;}
+  .stat-chip.hero{padding:14px 18px;}
+  .stat-chip.hero .chip-lbl{font-size:1.05rem;}
+  .stat-chip.hero .chip-num{font-size:2.6rem;}
+
+  /* ---------- reminder text (no box) ---------- */
+  .reminder-text{
+    color:#fff;
+    text-align:center;
+    font-weight:700;
+    font-size:1.02rem;
+    text-shadow:0 1px 4px rgba(0,0,0,.55), 0 0 2px rgba(0,0,0,.35);
+    margin:0;
+  }
+
+  /* ---------- slots (24格，固定10格一列) ---------- */
   .slot-row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
+    display:grid;
+    grid-template-columns:repeat(10, 1fr);
+    gap:5px;
     padding:10px;
     background:rgba(255,255,255,0.55);
     border:2px solid var(--border-dark);
     border-radius:12px;
   }
   .slot{
-    width:42px;height:42px;
+    width:100%;
+    aspect-ratio:1/1;
     border:2px dashed #8b9bc4;
-    border-radius:9px;
+    border-radius:8px;
     display:flex;
     align-items:center;
     justify-content:center;
     background:rgba(255,255,255,0.5);
     cursor:pointer;
-    flex-shrink:0;
   }
   .slot.filled{border-style:solid;border-color:var(--border-dark);background:rgba(255,255,255,0.85);}
   .slot.next-hint{border-color:var(--yellow);box-shadow:0 0 6px var(--yellow);}
 
   /* ---------- sprite icon generic ---------- */
   .sprite-emoji{display:inline-block;line-height:1;}
-
-  /* ---------- emoji health ---------- */
-  .health-badge{font-size:2.1rem;}
-  .health-row{display:flex;align-items:center;gap:10px;}
-
-  /* ---------- warning box ---------- */
-  .warn-box{
-    background:#fff3c4;
-    border:3px solid var(--accent-warm);
-    color:#6b3f0a;
-    border-radius:14px;
-    padding:14px 16px;
-    font-size:1.05rem;
-    font-weight:700;
-  }
 
   /* ---------- tip list ---------- */
   .tip-list{margin:0 0 12px;padding-left:1.3em;}
@@ -223,11 +223,6 @@
   .day-dot{width:13px;height:13px;border-radius:50%;background:#f0ddc0;border:1.5px solid var(--border-dark);}
   .day-dot.done{background:var(--green);}
   .day-dot.active{background:var(--yellow);}
-
-  /* ---------- table ---------- */
-  table.cmp-table{width:100%;border-collapse:collapse;font-size:1rem;}
-  table.cmp-table th,table.cmp-table td{border:2px solid var(--border-dark);padding:8px 10px;text-align:center;}
-  table.cmp-table th{background:var(--bg-panel-light);color:var(--accent-warm);}
 
   /* ---------- chart ---------- */
   .chart-wrap{background:rgba(255,255,255,0.55);border:2px solid var(--border-dark);border-radius:12px;padding:10px;}
@@ -261,7 +256,6 @@
   .flex-between{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
 
   @media (max-width:420px){
-    .slot{width:36px;height:36px;}
     .stepper .pixel-btn{width:48px;height:48px;font-size:1.3rem;}
     h1{font-size:1.6rem;}
   }
@@ -356,52 +350,23 @@ function summarizeDay(pillCount, sequence){
   };
 }
 
-// 套用固定配方跑 N 天（污點狀態每日重置，配方固定；多人模式用）
-function simulateDaysFixed(pillCount, sequence, totalDays){
-  totalDays = totalDays || TOTAL_DAYS;
-  const daily = summarizeDay(pillCount, sequence);
-  const cumulative = [];
-  let total = 0;
-  let sickDays = 0;
-  for(let d=1; d<=totalDays; d++){
-    total += daily.abilityGain;
-    cumulative.push(Math.round(total*100)/100);
-    if(daily.health.emoji === "😫") sickDays++;
-  }
-  return {
-    dailyAbilityGain: daily.abilityGain,
-    cumulative,
-    sickDays,
-    total: cumulative[cumulative.length-1],
-    avgPerDay: Math.round((cumulative[cumulative.length-1]/totalDays)*100)/100,
-    health: daily.health,
-    tainted: daily.tainted,
-  };
-}
-
 // 重複一整週（7天配方）跑 9 週（污點狀態每日重置，配方固定；個人模式用）
 function simulateWeeksFixed(weekHistory, weeks){
   weeks = weeks || TOTAL_WEEKS;
+  const dayPenalties = weekHistory.map(computeDayPenalty);
   const cumulative = [];
   let total = 0;
-  let sickDays = 0;
-  let taintedDays = 0;
   for(let w=0; w<weeks; w++){
     for(let d=0; d<weekHistory.length; d++){
       const day = weekHistory[d];
-      total += day.abilityGain;
+      total += day.abilityGain - dayPenalties[d].amount;
       cumulative.push(Math.round(total*100)/100);
-      if(day.health.emoji === "😫") sickDays++;
-      if(day.tainted) taintedDays++;
     }
   }
   return {
     cumulative,
-    sickDays,
-    taintedDays,
     total: cumulative[cumulative.length-1],
     totalDays: cumulative.length,
-    avgPerDay: Math.round((cumulative[cumulative.length-1]/cumulative.length)*100)/100,
   };
 }
 
@@ -431,7 +396,6 @@ function renderBattery(cap, power){
     if(i < shown) cell.classList.add(cap>0 && shown<=Math.ceil(cap*0.25) ? "low" : "on");
     wrap.appendChild(cell);
   }
-  if(cap===0) wrap.appendChild(el("div",{class:"muted"},"（沒有電力）"));
   return wrap;
 }
 
@@ -493,11 +457,11 @@ function screenRules(onNext){
   wrap.appendChild(el("h1", {class:"center"}, "📜 遊戲規則"));
   const panel = el("div", {class:"panel"});
   panel.appendChild(el("p", {}, "每天的 24 顆能量丸，分兩個步驟分配："));
-  panel.appendChild(el("p", {}, "① 先決定要吃幾顆 🔥元氣充電寶，決定今天的電力上限。"));
+  panel.appendChild(el("p", {}, "① 先決定要吃幾顆 🔥元氣充電寶，為當日充電。"));
   panel.appendChild(el("p", {}, "② 剩下的格子，自己決定要吃 💎能力大補丸 還是 🍬神奇泡泡糖，並排出順序。"));
   panel.appendChild(el("p", {}, "⚠️ 小提醒："));
   const tipList = el("ul", {class:"tip-list"});
-  ["元氣充電寶吃太少，容易不舒服","沒有電力的時候吃大補丸，也補不到能力","泡泡糖一次吃太多顆，效果會大打折扣"].forEach(t=>{
+  ["元氣充電寶吃太少，當日會沒有能量做任何事","沒有電力的時候吃大補丸，也補不到能力","泡泡糖一次吃太多顆，效果會大打折扣"].forEach(t=>{
     tipList.appendChild(el("li", {}, t));
   });
   panel.appendChild(tipList);
@@ -511,12 +475,12 @@ function screenRules(onNext){
   return wrap;
 }
 
-/* ---------------- 共用元件：stat box ---------------- */
-function makeStatBox(label, value){
-  const box = el("div", {class:"stat-box"});
-  box.appendChild(el("span", {class:"num"}, String(value)));
-  box.appendChild(el("span", {class:"lbl"}, label));
-  return box;
+/* ---------------- 共用元件：stat chip ---------------- */
+function makeStatChip(label, value, hero){
+  const chip = el("div", {class:"stat-chip"+(hero?" hero":"")});
+  chip.appendChild(el("span", {class:"chip-lbl"}, label));
+  chip.appendChild(el("span", {class:"chip-num"}, String(value)));
+  return chip;
 }
 
 /* ---------------- 共用元件：24格分配（電力＋排列同頁） ---------------- */
@@ -569,13 +533,10 @@ function renderAllocation(opts){
     const filled = state.sequence.filter(Boolean);
     const sim = simulateDay(state.pillCount, filled);
 
-    const statPanel = el("div", {class:"panel"});
     const statRow = el("div", {class:"stat-row"});
-    statRow.appendChild(makeStatBox("⚡ 目前電力", sim.finalPower+" / "+state.pillCount));
-    statRow.appendChild(makeStatBox("💪 目前能力值", sim.ability));
-    statPanel.appendChild(statRow);
-    if(state.pillCount > 0) statPanel.appendChild(renderBattery(state.pillCount, sim.finalPower));
-    container.appendChild(statPanel);
+    statRow.appendChild(makeStatChip("⚡ 目前電力", sim.finalPower));
+    statRow.appendChild(makeStatChip("💪 目前能力值", sim.ability));
+    container.appendChild(statRow);
 
     const panel1 = el("div", {class:"panel"});
     panel1.appendChild(el("h3", {class:"center"}, "🔥 元氣充電寶（今日儲備電力）"));
@@ -586,14 +547,18 @@ function renderAllocation(opts){
     stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>setPill(state.pillCount+1)}, "+1"));
     stepper.appendChild(el("button", {class:"pixel-btn", onclick:()=>setPill(state.pillCount+5)}, "+5"));
     panel1.appendChild(stepper);
+    if(state.pillCount > 0) panel1.appendChild(renderBattery(state.pillCount, sim.finalPower));
     container.appendChild(panel1);
 
     const panel2 = el("div", {class:"panel"});
-    panel2.appendChild(el("h3", {class:"center"}, "排列能量丸順序：💎大補丸／🍬泡泡糖"));
-    panel2.appendChild(el("p", {class:"muted center"}, "點按鈕依序填入下一格；點已填好的格子可切換種類。"));
+    panel2.appendChild(el("h3", {class:"center"}, "排列能量丸順序"));
+    const btnRow = el("div", {class:"btn-row"});
+    btnRow.appendChild(el("button", {class:"pixel-btn gem", onclick:()=>fillNext("S")}, "💎 能力大補丸"));
+    btnRow.appendChild(el("button", {class:"pixel-btn candy", onclick:()=>fillNext("C")}, "🍬 神奇泡泡糖"));
+    panel2.appendChild(btnRow);
     const slotRow = el("div", {class:"slot-row"});
     if(state.sequence.length === 0){
-      slotRow.appendChild(el("div", {class:"muted"}, "（電力全部用在充電，沒有剩餘格子）"));
+      slotRow.appendChild(el("div", {class:"muted", style:"grid-column:1 / -1;"}, "（電力全部用在充電，沒有剩餘格子）"));
     }else{
       const nextIdx = state.sequence.indexOf(null);
       state.sequence.forEach((s, idx)=>{
@@ -606,15 +571,13 @@ function renderAllocation(opts){
       });
     }
     panel2.appendChild(slotRow);
-
-    const btnRow = el("div", {class:"btn-row"});
-    btnRow.appendChild(el("button", {class:"pixel-btn gem", onclick:()=>fillNext("S")}, "💎 大補丸"));
-    btnRow.appendChild(el("button", {class:"pixel-btn candy", onclick:()=>fillNext("C")}, "🍬 泡泡糖"));
-    panel2.appendChild(btnRow);
     container.appendChild(panel2);
 
     if(sim.tainted){
-      container.appendChild(el("div", {class:"warn-box"}, "⚠️ 連續吃泡泡糖太多次，已經「硬撐」了！效果大打折扣，今天很難回到最佳狀態。"));
+      container.appendChild(el("p", {class:"reminder-text"}, "⚠️ 連續吃神奇泡泡糖，效果大打折扣，很難回到最佳狀態。"));
+    }
+    if(sim.steps.some(s=>s.wasted)){
+      container.appendChild(el("p", {class:"reminder-text"}, "⚠️ 電力不足，吃能力大補丸沒有辦法補到能力。"));
     }
 
     const btnRow2 = el("div", {class:"btn-row"});
@@ -735,21 +698,26 @@ function screenPersonalSettlement(dayNum, history){
   wrap.appendChild(dots);
 
   const today = history[dayNum-1];
-  const panel = el("div", {class:"panel"});
-  const hr = el("div", {class:"health-row", style:"justify-content:center;"});
-  hr.appendChild(el("span", {class:"health-badge"}, today.health.emoji));
-  hr.appendChild(el("span", {}, today.health.label+"（元氣充電寶 "+today.pillCount+" 顆）"));
-  panel.appendChild(hr);
-  panel.appendChild(renderBattery(today.cap, today.finalPower));
+  const cum = history.reduce((s,d)=>s+d.abilityGain, 0);
 
   const statRow = el("div", {class:"stat-row"});
-  statRow.appendChild(makeStatBox("今日能力值增量", "+"+today.abilityGain));
-  const cum = history.reduce((s,d)=>s+d.abilityGain, 0);
-  statRow.appendChild(makeStatBox("累積總能力值", String(cum)));
-  panel.appendChild(statRow);
+  statRow.appendChild(makeStatChip("今日剩餘電量", today.finalPower));
+  statRow.appendChild(makeStatChip("今日能力增量", "+"+today.abilityGain));
+  statRow.appendChild(makeStatChip("累積總能力值", String(cum)));
+  wrap.appendChild(statRow);
 
-  if(today.tainted) panel.appendChild(el("div", {class:"warn-box"}, "⚠️ 今天靠泡泡糖硬撐，恢復效果大打折扣！"));
-  wrap.appendChild(panel);
+  const candyCount = today.sequence.filter(s=>s==='C').length;
+  const wastedCount = today.steps.filter(s=>s.type==='S' && s.wasted).length;
+  if(candyCount>0 || wastedCount>0){
+    const notePanel = el("div", {class:"panel"});
+    if(candyCount>0){
+      notePanel.appendChild(el("p", {}, "🍬 今天吃了 "+candyCount+" 顆神奇泡泡糖"+(today.tainted?"，連續吃太多次，效果打了折扣。":"。")));
+    }
+    if(wastedCount>0){
+      notePanel.appendChild(el("p", {}, "💎 有 "+wastedCount+" 次能力大補丸因為電力不足，沒有補到能力。"));
+    }
+    wrap.appendChild(notePanel);
+  }
 
   if(dayNum < 7){
     wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalDay(dayNum+1, history))}, "前往"+WEEKDAY_NAMES[dayNum]+" ▶"));
@@ -759,55 +727,116 @@ function screenPersonalSettlement(dayNum, history){
   return wrap;
 }
 
+// 每日健康規則：充電不足又超量讀書 → 過勞；糖吃太多 → 糖分過量，各扣5點
+function computeDayPenalty(day){
+  const supplementCount = day.sequence.filter(s=>s==='S').length;
+  const candyCount = day.sequence.filter(s=>s==='C').length;
+  const overworked = day.pillCount < 10 && supplementCount > day.pillCount;
+  const sugarOverdose = candyCount > 4;
+  return { overworked, sugarOverdose, amount: (overworked?5:0)+(sugarOverdose?5:0) };
+}
+function dayStatusText(day){
+  const p = computeDayPenalty(day);
+  const labels = [];
+  if(p.overworked) labels.push("⚠️ 當日過勞");
+  if(p.sugarOverdose) labels.push("🍬 糖分過量");
+  return labels.length ? labels.join("　") : "😊 正常";
+}
+
+// 63天結算：四個逐日分類（依序檢查，互斥）＋超強戰鬥士總量門檻（獨立）
+const TIER_LABELS = {
+  time: "時間掌控小尖兵",
+  hospital: "身體垮掉送醫院",
+  lazy: "耍廢天兵",
+  needsWork: "待加強訓練兵",
+};
+function computeDayCategory(day){
+  const effectiveSupplementCount = day.steps.filter(s=>s.type==='S' && !s.wasted).length;
+  const candyCount = day.sequence.filter(s=>s==='C').length;
+  if(day.pillCount>=10 || effectiveSupplementCount>=8) return "time";
+  if(day.pillCount<8) return "hospital";
+  if(candyCount>5) return "lazy";
+  return "needsWork";
+}
+// cycle：會重複的一組天數摘要（個人模式為7天一週；多人模式為單一天）；repeats：重複次數
+function computeFinalStats(cycle, repeats){
+  const cumulative = [];
+  let total = 0;
+  const counts = {time:0, hospital:0, lazy:0, needsWork:0};
+  for(let r=0; r<repeats; r++){
+    for(let i=0;i<cycle.length;i++){
+      const day = cycle[i];
+      total += day.abilityGain;
+      cumulative.push(Math.round(total*100)/100);
+      counts[computeDayCategory(day)]++;
+    }
+  }
+  const finalTotal = cumulative[cumulative.length-1];
+  return {
+    cumulative,
+    total: finalTotal,
+    totalDays: cumulative.length,
+    achievedSuperFighter: finalTotal > 400,
+    counts,
+  };
+}
+function renderTierStats(counts){
+  const row = el("div", {class:"stat-row"});
+  row.appendChild(makeStatChip(TIER_LABELS.time, counts.time+" 天"));
+  row.appendChild(makeStatChip(TIER_LABELS.hospital, counts.hospital+" 天"));
+  row.appendChild(makeStatChip(TIER_LABELS.lazy, counts.lazy+" 天"));
+  row.appendChild(makeStatChip(TIER_LABELS.needsWork, counts.needsWork+" 天"));
+  return row;
+}
+
 function screenPersonalOverview(history){
   const wrap = el("div", {class:"screen"});
   wrap.appendChild(el("h1", {class:"center"}, "📊 本週總覽"));
 
-  const panel = el("div", {class:"panel"});
-  panel.appendChild(el("h3", {}, "每日能力值增量"));
-  const canvas = el("canvas", {class:"chart-canvas"});
-  panel.appendChild(el("div", {class:"chart-wrap"}, canvas));
-  wrap.appendChild(panel);
+  const panel1 = el("div", {class:"panel"});
+  panel1.appendChild(el("h3", {}, "每日剩餘電量"));
+  const canvas1 = el("canvas", {class:"chart-canvas"});
+  panel1.appendChild(el("div", {class:"chart-wrap"}, canvas1));
+  wrap.appendChild(panel1);
+
+  const panel2 = el("div", {class:"panel"});
+  panel2.appendChild(el("h3", {}, "每日能力增量"));
+  const canvas2 = el("canvas", {class:"chart-canvas"});
+  panel2.appendChild(el("div", {class:"chart-wrap"}, canvas2));
+  wrap.appendChild(panel2);
 
   const healthPanel = el("div", {class:"panel"});
-  healthPanel.appendChild(el("h3", {}, "健康狀態總覽"));
-  const hrow = el("div", {class:"stat-row"});
+  healthPanel.appendChild(el("h3", {}, "每日健康狀況提醒"));
   history.forEach((d,i)=>{
-    const box = el("div", {class:"stat-box"});
-    box.appendChild(el("span", {class:"health-badge"}, d.health.emoji));
-    box.appendChild(el("div", {class:"lbl"}, WEEKDAY_NAMES[i]));
-    hrow.appendChild(box);
+    const row = el("div", {class:"flex-between"});
+    row.appendChild(el("span", {}, WEEKDAY_NAMES[i]));
+    row.appendChild(el("span", {}, dayStatusText(d)));
+    healthPanel.appendChild(row);
   });
-  healthPanel.appendChild(hrow);
-  const weekTotal = history.reduce((s,d)=>s+d.abilityGain, 0);
-  const totalRow = el("div", {class:"stat-row"});
-  totalRow.appendChild(makeStatBox("本週累積能量值", String(weekTotal)));
-  healthPanel.appendChild(totalRow);
   wrap.appendChild(healthPanel);
 
-  wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalWeekResult(history))}, "重複這一週，看看"+TOTAL_WEEKS+"週後 ▶"));
+  const weekRes = simulateWeeksFixed(history, 1);
+  const totalPenalty = history.reduce((s,d)=>s+computeDayPenalty(d).amount, 0);
+  wrap.appendChild(makeStatChip("本週累積能量值", weekRes.total));
+  if(totalPenalty>0){
+    wrap.appendChild(el("p", {class:"muted center"}, "（已扣除 "+totalPenalty+" 點過勞／糖分過量懲罰）"));
+  }
+
+  wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalWeekResult(history))}, "如果都這樣過日子，暑假兩個月過去會變成什麼樣子呢？"));
 
   requestAnimationFrame(()=>{
-    drawBarChart(canvas, history.map((d,i)=>({label:WEEKDAY_NAMES[i][2], value:d.abilityGain})), {height:190});
+    drawBarChart(canvas1, history.map((d,i)=>({label:WEEKDAY_NAMES[i][2], value:d.finalPower})), {height:170});
+    drawBarChart(canvas2, history.map((d,i)=>({label:WEEKDAY_NAMES[i][2], value:d.abilityGain})), {height:170});
   });
   return wrap;
 }
 
-function buildWeekVerdictText(weekHistory, res){
-  const anySick = weekHistory.some(d=>d.health.emoji === "😫");
-  const anyTainted = weekHistory.some(d=>d.tainted);
-  const allRestHeavy = weekHistory.every(d=>d.pillCount >= 20);
-  if(anySick) return "這一週有幾天元氣充電寶吃太少，重複"+TOTAL_WEEKS+"週下來會一直處於生病狀態，能力值雖然還是會累積，但身體健康付出了很大代價！";
-  if(anyTainted) return "這一週有幾天靠泡泡糖硬撐，恢復效果打了折扣，重複"+TOTAL_WEEKS+"週下來，能力成長比穩穩交替安排來得慢。";
-  if(allRestHeavy) return "這一週把大量時間花在休息充電，身體很健康，但能力值幾乎沒有成長機會，重複"+TOTAL_WEEKS+"週也是一樣。";
-  return "這一週在休息與學習之間取得不錯的平衡，重複"+TOTAL_WEEKS+"週累積下來，能力值穩穩成長！";
-}
-
 function screenPersonalWeekResult(weekHistory){
-  const res = simulateWeeksFixed(weekHistory, TOTAL_WEEKS);
+  const stats = computeFinalStats(weekHistory, TOTAL_WEEKS);
   const wrap = el("div", {class:"screen"});
-  wrap.appendChild(el("h1", {class:"center"}, "🏁 重複 "+TOTAL_WEEKS+" 週後的樣子"));
-  wrap.appendChild(el("p", {class:"muted center"}, "把這一週（星期一～星期日）的配方，重複 "+TOTAL_WEEKS+" 週（共 "+res.totalDays+" 天），看看長期會變成什麼樣子。"));
+  wrap.appendChild(el("h1", {class:"center"}, "🏁 暑假兩個月後的樣子"));
+
+  wrap.appendChild(makeStatChip(stats.totalDays+"天總能力值", stats.total, true));
 
   const panel = el("div", {class:"panel"});
   panel.appendChild(el("h3", {}, "累積能力值成長曲線"));
@@ -815,13 +844,17 @@ function screenPersonalWeekResult(weekHistory){
   panel.appendChild(el("div", {class:"chart-wrap"}, canvas));
   wrap.appendChild(panel);
 
-  const statRow = el("div", {class:"stat-row"});
-  statRow.appendChild(makeStatBox(res.totalDays+"天總能力值", String(res.total)));
-  statRow.appendChild(makeStatBox("平均每日增量", String(res.avgPerDay)));
-  statRow.appendChild(makeStatBox("生病天數", res.sickDays+" / "+res.totalDays));
-  wrap.appendChild(statRow);
+  if(stats.achievedSuperFighter){
+    const badge = el("div", {class:"panel center achieve-badge"});
+    badge.appendChild(el("h2", {}, "🏆 達成超強戰鬥士！"));
+    badge.appendChild(el("p", {}, stats.totalDays+"天總累積能力值超過400點，休息和學習都安排得很好！"));
+    wrap.appendChild(badge);
+  }
 
-  wrap.appendChild(el("div", {class:"panel"}, el("p", {}, buildWeekVerdictText(weekHistory, res))));
+  const statsPanel = el("div", {class:"panel"});
+  statsPanel.appendChild(el("h3", {}, stats.totalDays+"天分類天數統計"));
+  statsPanel.appendChild(renderTierStats(stats.counts));
+  wrap.appendChild(statsPanel);
 
   const btnRow = el("div", {class:"btn-row"});
   btnRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:()=>goto(screenCover())}, "回到封面"));
@@ -829,7 +862,7 @@ function screenPersonalWeekResult(weekHistory){
   wrap.appendChild(btnRow);
 
   requestAnimationFrame(()=>{
-    drawLineChart(canvas, [{label:"能力值", color:"#4ecca3", points:res.cumulative}], {height:220});
+    drawLineChart(canvas, [{label:"能力值", color:"#4ecca3", points:stats.cumulative}], {height:220});
   });
   return wrap;
 }
@@ -884,12 +917,12 @@ function screenMpGroupInput(groupIdx, totalGroups, groups){
 
 function screenMpResults(groups){
   const wrap = el("div", {class:"screen"});
-  wrap.appendChild(el("h1", {class:"center"}, "🏆 "+TOTAL_DAYS+" 天（"+TOTAL_WEEKS+"週）比較結果"));
+  wrap.appendChild(el("h1", {class:"center"}, "🏆 "+TOTAL_DAYS+" 天比較結果"));
 
   const colors = ["#4ecca3","#ff8a3d","#6f7bff","#ff8fc6","#ffd93d","#ff5c6c"];
   const results = groups.map((g,i)=>({
     name: g.name, color: colors[i%colors.length],
-    res: simulateDaysFixed(g.pillCount, g.sequence, TOTAL_DAYS), summary: g,
+    stats: computeFinalStats([g], TOTAL_DAYS),
   }));
 
   const panel = el("div", {class:"panel"});
@@ -906,23 +939,16 @@ function screenMpResults(groups){
   panel.appendChild(legend);
   wrap.appendChild(panel);
 
-  const tablePanel = el("div", {class:"panel"});
-  tablePanel.appendChild(el("h3", {}, "各組生病天數統計"));
-  const table = el("table", {class:"cmp-table"});
-  const thead = el("tr", {});
-  ["小組","元氣顆數",TOTAL_DAYS+"天總能力值","生病天數","曾硬撐"].forEach(h=>thead.appendChild(el("th", {}, h)));
-  table.appendChild(thead);
   results.forEach(r=>{
-    const tr = el("tr", {});
-    tr.appendChild(el("td", {}, r.name));
-    tr.appendChild(el("td", {}, String(r.summary.pillCount)));
-    tr.appendChild(el("td", {}, String(r.res.total)));
-    tr.appendChild(el("td", {}, r.res.sickDays+" / "+TOTAL_DAYS));
-    tr.appendChild(el("td", {}, r.res.tainted ? "是" : "否"));
-    table.appendChild(tr);
+    const card = el("div", {class:"panel"});
+    card.appendChild(el("h3", {}, r.name));
+    card.appendChild(makeStatChip(TOTAL_DAYS+"天總能力值", r.stats.total));
+    if(r.stats.achievedSuperFighter){
+      card.appendChild(el("p", {}, "🏆 達成超強戰鬥士！（總能力值超過400點）"));
+    }
+    card.appendChild(renderTierStats(r.stats.counts));
+    wrap.appendChild(card);
   });
-  tablePanel.appendChild(table);
-  wrap.appendChild(tablePanel);
 
   const btnRow = el("div", {class:"btn-row"});
   btnRow.appendChild(el("button", {class:"pixel-btn secondary", onclick:()=>goto(screenCover())}, "回到封面"));
@@ -930,7 +956,7 @@ function screenMpResults(groups){
   wrap.appendChild(btnRow);
 
   requestAnimationFrame(()=>{
-    drawLineChart(canvas, results.map(r=>({label:r.name, color:r.color, points:r.res.cumulative})), {height:230});
+    drawLineChart(canvas, results.map(r=>({label:r.name, color:r.color, points:r.stats.cumulative})), {height:230});
   });
   return wrap;
 }
