@@ -271,16 +271,6 @@
 
 /* ---------------- 常數 ---------------- */
 const TOTAL_SLOTS = 24;
-const HEALTH_LEVELS = [
-  {min:10, max:24, emoji:"😊", label:"健康"},
-  {min:7,  max:9,  emoji:"😐", label:"有點累"},
-  {min:4,  max:6,  emoji:"😟", label:"很累"},
-  {min:0,  max:3,  emoji:"😫", label:"生病了"},
-];
-function getHealth(pillCount){
-  for(const h of HEALTH_LEVELS){ if(pillCount>=h.min && pillCount<=h.max) return h; }
-  return HEALTH_LEVELS[HEALTH_LEVELS.length-1];
-}
 const WEEKDAY_NAMES = ["星期一","星期二","星期三","星期四","星期五","星期六","星期日"];
 const DAYS_PER_WEEK = 7;
 const TOTAL_WEEKS = 9;
@@ -337,7 +327,6 @@ function simulateDay(pillCount, sequence){
 
 function summarizeDay(pillCount, sequence){
   const sim = simulateDay(pillCount, sequence);
-  const health = getHealth(pillCount);
   return {
     pillCount,
     sequence: sequence.slice(),
@@ -346,7 +335,6 @@ function summarizeDay(pillCount, sequence){
     abilityGain: sim.ability,
     tainted: sim.tainted,
     steps: sim.steps,
-    health,
   };
 }
 
@@ -727,53 +715,56 @@ function screenPersonalSettlement(dayNum, history){
   return wrap;
 }
 
-// 每日健康規則：充電不足又超量讀書 → 過勞；糖吃太多 → 糖分過量，各扣5點
+// 每日扣分機制：累垮（元氣丸<8 或 大補丸>元氣丸）各扣5點；懶惰糖分過量（糖≥5）另扣5點，兩者可加總
 function computeDayPenalty(day){
   const supplementCount = day.sequence.filter(s=>s==='S').length;
   const candyCount = day.sequence.filter(s=>s==='C').length;
-  const overworked = day.pillCount < 10 && supplementCount > day.pillCount;
-  const sugarOverdose = candyCount > 4;
-  return { overworked, sugarOverdose, amount: (overworked?5:0)+(sugarOverdose?5:0) };
+  const collapsed = day.pillCount < 8 || supplementCount > day.pillCount;
+  const lazyCandy = candyCount > 4;
+  return { collapsed, lazyCandy, amount: (collapsed?5:0)+(lazyCandy?5:0) };
 }
 function dayStatusText(day){
   const p = computeDayPenalty(day);
   const labels = [];
-  if(p.overworked) labels.push("⚠️ 當日過勞");
-  if(p.sugarOverdose) labels.push("🍬 糖分過量");
+  if(p.collapsed) labels.push("⚠️ 累垮");
+  if(p.lazyCandy) labels.push("🍬 懶惰糖分過量");
   return labels.length ? labels.join("　") : "😊 正常";
 }
 
-// 63天結算：能力分數（累積能力值）與不良習慣天數，兩者各自獨立判定、互不影響
+// 63天結算：能力分數扣除每日累垮／懶惰糖分過量懲罰；不良習慣天數各自獨立統計
 const ABILITY_TIER_LABELS = {
   superFighter: "超強戰鬥士",
-  vanguard: "能量小尖兵",
-  rookie: "能力菜鳥",
+  vanguard: "用功小尖兵",
+  rookie: "能力累積不足無法戰鬥",
 };
 function computeAbilityTier(total){
-  if(total >= 450) return "superFighter";
-  if(total >= 300) return "vanguard";
+  if(total >= 500) return "superFighter";
+  if(total >= 400) return "vanguard";
   return "rookie";
 }
-// 兩項不良習慣各自獨立判定，同一天可以同時符合兩項，互不排斥
+// 兩項不良習慣各自獨立判定，與扣分條件一致，同一天可以同時符合兩項，互不排斥
 function computeDayBadHabits(day){
   const supplementCount = day.sequence.filter(s=>s==='S').length;
   const candyCount = day.sequence.filter(s=>s==='C').length;
   return {
-    collapsed: day.pillCount<10 || supplementCount>day.pillCount, // 累垮送醫院
+    collapsed: day.pillCount<8 || supplementCount>day.pillCount, // 累垮送醫院
     lazy: candyCount>=5, // 耍廢天兵
   };
 }
-// cycle：會重複的一組天數摘要（個人模式為7天一週；多人模式也是7天一週）；repeats：重複次數（週數）
-// 能力值為純累加（不扣分）；不良習慣天數另外獨立統計，不影響能力分數
+// cycle：會重複的一組天數摘要；repeats：重複次數（週數）
+// 能力值扣除每日懲罰後累加；並回傳總扣分量及不良習慣天數
 function computeFinalStats(cycle, repeats){
   const cumulative = [];
   let total = 0;
+  let totalDeducted = 0;
   let collapsedDays = 0;
   let lazyDays = 0;
   for(let r=0; r<repeats; r++){
     for(let i=0;i<cycle.length;i++){
       const day = cycle[i];
-      total += day.abilityGain;
+      const penalty = computeDayPenalty(day);
+      total += day.abilityGain - penalty.amount;
+      totalDeducted += penalty.amount;
       cumulative.push(Math.round(total*100)/100);
       const habits = computeDayBadHabits(day);
       if(habits.collapsed) collapsedDays++;
@@ -785,6 +776,7 @@ function computeFinalStats(cycle, repeats){
     cumulative,
     total: finalTotal,
     totalDays: cumulative.length,
+    totalDeducted,
     abilityTier: computeAbilityTier(finalTotal),
     collapsedDays,
     lazyDays,
@@ -827,7 +819,7 @@ function screenPersonalOverview(history){
   const totalPenalty = history.reduce((s,d)=>s+computeDayPenalty(d).amount, 0);
   wrap.appendChild(makeStatChip("本週累積能量值", weekRes.total));
   if(totalPenalty>0){
-    wrap.appendChild(el("p", {class:"muted center"}, "（已扣除 "+totalPenalty+" 點過勞／糖分過量懲罰）"));
+    wrap.appendChild(el("p", {class:"muted center"}, "（已扣除 "+totalPenalty+" 點累垮／懶惰糖分過量懲罰）"));
   }
 
   wrap.appendChild(el("button", {class:"pixel-btn block fire", onclick:()=>goto(screenPersonalWeekResult(history))}, "如果都這樣過日子，暑假兩個月過去會變成什麼樣子呢？"));
@@ -845,6 +837,9 @@ function screenPersonalWeekResult(weekHistory){
   wrap.appendChild(el("h1", {class:"center"}, "🏁 暑假兩個月後的樣子"));
 
   wrap.appendChild(makeStatChip(stats.totalDays+"天總能力值", stats.total, true));
+  if(stats.totalDeducted > 0){
+    wrap.appendChild(el("p", {class:"muted center"}, "（已扣除 "+stats.totalDeducted+" 點累垮／懶惰糖分過量懲罰）"));
+  }
 
   const panel = el("div", {class:"panel"});
   panel.appendChild(el("h3", {}, "累積能力值成長曲線"));
@@ -997,6 +992,9 @@ function screenMpResults(groups){
     const card = el("div", {class:"panel"+(isSuperFighter?" achieve-badge":"")});
     card.appendChild(el("h3", {}, r.name));
     card.appendChild(makeStatChip(TOTAL_DAYS+"天總能力值", r.stats.total));
+    if(r.stats.totalDeducted > 0){
+      card.appendChild(el("p", {class:"muted center"}, "（已扣除 "+r.stats.totalDeducted+" 點）"));
+    }
     card.appendChild(el("p", {class:"center"}, (isSuperFighter?"🏆 ":"🏅 ")+ABILITY_TIER_LABELS[r.stats.abilityTier]));
     card.appendChild(renderBadHabitStats(r.stats));
     wrap.appendChild(card);
